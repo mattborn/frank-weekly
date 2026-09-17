@@ -1,0 +1,29 @@
+group,metric,label,sleeper,frank,other,note
+Players,,,,,,
+,Name Position Team,,x,,,
+Performance,,,,,,
+,Season Points,Points,x,,,
+,Overall Points Rank,,x,,,
+,Rostered Points Rank,Rank,,x,,
+,Season Projected Points,,x,,,
+,Weekly Projected Average,Proj,,x,,Season total / 18
+Rosters,,,,,,
+,Overall Draft Pick,Pick,x,,,"Waiver adds assigned 181, 182, etc."
+,Starter/Bench Status,,x,,,
+,Draft Pick minus Points Rank,vPick,,x,,
+,Weekly Starter Points,,x,,,
+,Weekly Full Roster Points,Roster,,x,,"All 15 players, not just starters"
+,Sum vPick,vPick,,x,,
+Charts,,,,,,
+,Perfect Lineup,,,x,,
+Teams,,,,,,
+,Offensive fantasy points,,,x,,QB/RB/WR/TE/K only
+,2025 Week 14 Rank,2025,,,x,FantasyPros PPR
+,Year-over-Year Delta,v2025,,x,,2025 rank minus current rank
+,Positional Edge,Edge,,x,,Top position vs league average
+,Positional Hole,Hole,,x,,Bottom position vs league average
+Enrichment,,,,,,
+,Average Draft Position,ADP,,,x,FantasyPros PPR
+,ADP minus Points Rank,vADP,,x,,
+,Sum vADP,vADP,,x,,
+,"Name Normalization",,,x,,"JAC = JAX, Kenneth Walker III = Kenneth Walker"

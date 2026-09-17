@@ -1,0 +1,36 @@
+* { box-sizing: border-box; margin: 0 }
+:root { --text: #ccc; --half: #777; --blue: #48f; --green: #5a5; --orange: #e93; --red: #a55; --yellow: #cc4 }
+body { background: #111; color: var(--text); font: 12px/1.4 monospace; margin: 0 auto; max-width: 100rem; padding: 1rem }
+h1, h2 { font-size: 14px; margin-bottom: 1rem }
+h2 { margin-top: 2rem }
+#tabs { display: flex; gap: 8px; margin-bottom: 1rem }
+#tabs button { background: none; border: 1px solid #333; color: var(--half); cursor: pointer; font: inherit; padding: 4px 12px }
+#tabs button.on { border-color: var(--text); color: var(--text) }
+.cards { display: flex; flex-wrap: wrap; gap: 1rem }
+.cards + .cards { margin-top: 1rem }
+.card { border: 1px solid #333; flex: 1 1 calc(50% - 8px); max-width: 32rem; min-width: 400px; overflow-x: auto; padding: 12px }
+.card h2 { font-size: 1rem; margin: 0 0 8px }
+.card .summary { color: var(--half); font-size: 11px; margin-bottom: 8px }
+table { border-collapse: collapse; font-size: 11px; width: 100% }
+th, td { padding: 2px 6px; text-align: left; white-space: nowrap }
+th { border-bottom: 1px solid #333; color: var(--half); font-size: 10px; font-weight: normal; white-space: nowrap }
+#cards th:nth-child(n+4), #cards td:nth-child(n+4) { text-align: right }
+:is(th, td):first-child { padding-left: 0 }
+:is(th, td):last-child { padding-right: 0 }
+.header { align-items: center; display: flex; justify-content: space-between; margin-bottom: 8px }
+.header h2 { margin: 0 }
+.header select { background: #111; border: 1px solid #333; color: var(--half); font: inherit; padding: 4px 8px }
+.card .expand { background: none; border: 1px solid #333; color: var(--half); cursor: pointer; font-size: 14px; line-height: 1; padding: 2px 6px }
+.card.wide { max-width: 100% }
+#legend th, #legend td { text-align: left }
+#legend th:nth-child(n+3), #legend td:nth-child(n+3):not(:last-child) { text-align: center }
+tbody tr:not(.group):nth-child(even) { background: #1a1a1a }
+#legend .note-col { display: none }
+.card.wide #legend .note-col { display: table-cell }
+.group td { color: var(--half); padding-top: 12px }
+#showRosters { color: var(--half); display: block; margin: 1rem 0 }
+#rostersSection { margin-bottom: 1rem }
+.bench { color: var(--half) }
+.total td { border-top: 1px solid #333; font-weight: bold }
+td.plus, tr.plus { color: var(--green) }
+td.minus, tr.minus { color: var(--red) }
