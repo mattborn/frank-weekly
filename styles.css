@@ -19,7 +19,9 @@ th { border-bottom: 1px solid #333; color: var(--half); font-size: 10px; font-we
 :is(th, td):last-child { padding-right: 0 }
 .header { align-items: center; display: flex; justify-content: space-between; margin-bottom: 8px }
 .header h2 { margin: 0 }
-.header select { background: #111; border: 1px solid #333; color: var(--half); font: inherit; padding: 4px 8px }
+.opts { display: flex; gap: 8px }
+.opts button { background: none; border: none; color: var(--half); cursor: pointer; font: inherit; padding: 0 }
+.opts button.on { color: var(--text) }
 .card .expand { background: none; border: 1px solid #333; color: var(--half); cursor: pointer; font-size: 14px; line-height: 1; padding: 2px 6px }
 .card.wide { max-width: 100% }
 #legend th, #legend td { text-align: left }

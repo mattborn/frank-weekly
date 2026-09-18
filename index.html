@@ -13,7 +13,7 @@
 <div class="cards" id="rankings"></div>
 <a href="#" id="showRosters">Show all rosters</a>
 <div hidden id="rostersSection">
-<div class="header"><h2>All rosters</h2><select id="rosterSort"><option value="alpha">Alphabetical</option><option value="pts" selected>Full Roster Points</option><option value="vpick">vPick</option></select></div>
+<div class="header"><h2>All rosters</h2><div class="opts" id="rosterSort"></div></div>
 <div class="cards" id="cards"></div>
 </div>
 <div class="cards" id="cards2">
@@ -146,7 +146,18 @@ fetch('data/sleeper-1389707861860319232.json').then(r => r.json()).then(data => 
     div.appendChild(table)
     container.appendChild(div)
   }
-  document.getElementById('rosterSort').onchange = e => renderCards(e.target.value)
+  const rosterSortOpts = document.getElementById('rosterSort')
+  for (const [label, val] of [['Alphabetical', 'alpha'], ['Roster Points', 'pts'], ['vPick', 'vpick']]) {
+    const btn = document.createElement('button')
+    btn.textContent = label
+    if (val === 'pts') btn.className = 'on'
+    btn.onclick = () => {
+      rosterSortOpts.querySelectorAll('button').forEach(b => b.className = '')
+      btn.className = 'on'
+      renderCards(val)
+    }
+    rosterSortOpts.appendChild(btn)
+  }
   renderCards('pts')
   // perfect lineup
   const renderPerfect = rostered => {
@@ -292,6 +303,76 @@ fetch('data/sleeper-1389707861860319232.json').then(r => r.json()).then(data => 
   teamTable.appendChild(teamTbody)
   teamDiv.appendChild(teamTable)
   document.getElementById('cards2').appendChild(teamDiv)
+  // player table
+  const ptDiv = document.createElement('div')
+  ptDiv.className = 'card'
+  ptDiv.style.maxWidth = '100%'
+  ptDiv.style.flexBasis = '100%'
+  const ptHeader = document.createElement('div')
+  ptHeader.className = 'header'
+  const ptH2 = document.createElement('h2')
+  ptH2.textContent = 'Players'
+  ptHeader.appendChild(ptH2)
+  const ptFilters = document.createElement('div')
+  ptFilters.style.display = 'flex'
+  ptFilters.style.gap = '1rem'
+  let activePos = 'All', activeRoster = 'all'
+  const posOpts = document.createElement('div')
+  posOpts.className = 'opts'
+  const rosterOpts = document.createElement('div')
+  rosterOpts.className = 'opts'
+  const buildOpts = (container, items, getActive, setActive) => {
+    container.innerHTML = ''
+    for (const [label, val] of items) {
+      const btn = document.createElement('button')
+      btn.textContent = label
+      if (val === getActive()) btn.className = 'on'
+      btn.onclick = () => { setActive(val); buildOpts(container, items, getActive, setActive); renderPlayers() }
+      container.appendChild(btn)
+    }
+  }
+  buildOpts(posOpts, [['All', 'All'], ['QB', 'QB'], ['RB', 'RB'], ['WR', 'WR'], ['TE', 'TE']], () => activePos, v => activePos = v)
+  buildOpts(rosterOpts, [['All', 'all'], ['Rostered', 'rostered'], ['Unrostered', 'unrostered']], () => activeRoster, v => activeRoster = v)
+  ptFilters.appendChild(posOpts)
+  ptFilters.appendChild(rosterOpts)
+  ptHeader.appendChild(ptFilters)
+  ptDiv.appendChild(ptHeader)
+  const ptTable = document.createElement('table')
+  ptDiv.appendChild(ptTable)
+  const renderPlayers = () => {
+    ptTable.innerHTML = ''
+    const thead = document.createElement('thead')
+    const hr = document.createElement('tr')
+    for (const h of ['Player', 'Pos', 'Team', 'Points', 'Snap%', 'Vol%', 'Depth', 'Signal']) {
+      const th = document.createElement('th')
+      th.textContent = h
+      hr.appendChild(th)
+    }
+    thead.appendChild(hr)
+    ptTable.appendChild(thead)
+    const tbody = document.createElement('tbody')
+    const pos = activePos
+    const roster = activeRoster
+    const filtered = data.playerTable.filter(p =>
+      (pos === 'All' || p.pos === pos) &&
+      (roster === 'all' || (roster === 'rostered' ? p.rostered : !p.rostered))
+    )
+    for (const p of filtered) {
+      const tr = document.createElement('tr')
+      const vals = [p.name, p.pos, p.team, p.pts, p.snapPct + '%', p.volShare + '%', p.depth, p.signal]
+      vals.forEach((v, i) => {
+        const td = document.createElement('td')
+        td.textContent = v
+        if (i === 0) td.title = p.name
+        if (i === 7) td.className = p.signal === 'claim' ? 'plus' : p.signal === 'avoid' ? 'minus' : ''
+        tr.appendChild(td)
+      })
+      tbody.appendChild(tr)
+    }
+    ptTable.appendChild(tbody)
+  }
+  renderPlayers()
+  document.getElementById('cards2').appendChild(ptDiv)
 })
 fetch('legend.csv').then(r => r.text()).then(text => {
   const [, ...lines] = text.trim().split('\n')

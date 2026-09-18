@@ -14,6 +14,11 @@ Rosters,,,,,,
 ,Weekly Starter Points,,x,,,
 ,Weekly Full Roster Points,Roster,,x,,"All 15 players, not just starters"
 ,Sum vPick,vPick,,x,,
+Players,,,,,,
+,Snap Percentage,Snap%,,x,,Player snaps / team offensive snaps
+,Volume Share,Vol%,,x,,Targets (WR/TE) or rush attempts (RB) or pass attempts (QB) vs teammates
+,Depth Chart Rank,Depth,,x,,Ranked by volume within team-position group
+,"Signal (claim, gamble, avoid)",Signal,,x,,"Depth 1-2 + 25%+ vol = claim, depth 3+ = avoid"
 Charts,,,,,,
 ,Perfect Lineup,,,x,,
 Teams,,,,,,

@@ -257,7 +257,47 @@ const read = f => JSON.parse(fs.readFileSync(f, 'utf8'))
     const holeTitle = `${diffs.at(-1)[0]}: ${Math.round(ppts[diffs.at(-1)[0]] || 0)} pts vs ${Math.round(posAvg[diffs.at(-1)[0]])} avg`
     return { abbr: team, edge, edgeTitle, hole, holeTitle, name: teamNames[team] || team, priorRank: pr, pts: +pts.toFixed(1), rank, v2025: pr ? pr - rank : null }
   }).sort((a, b) => b.pts - a.pts)
-  const report = { bestWaiver, cards, nflTeams, perfectLineup, perfectLineupAll, rosteredCount: rosteredIds.size, season: SEASON, week }
+  // player table with volume signals
+  const depthChart = {}
+  for (const entry of statsRaw) {
+    const p = playersDb[entry.player_id] || entry.player || {}
+    const pos = (entry.player || p).position || ''
+    const team = entry.team || p.team
+    const pid = entry.player_id
+    if (!team || !['QB', 'RB', 'WR', 'TE'].includes(pos)) continue
+    const s = entry.stats || {}
+    const vol = pos === 'QB' ? (s.pass_att || 0) : pos === 'RB' ? (s.rush_att || 0) : (s.rec_tgt || 0)
+    const pts = +Object.entries(s).reduce((sum, [k, v]) => sum + (scoring[k] || 0) * v, 0).toFixed(1)
+    const key = `${team}-${pos}`
+    if (!depthChart[key]) depthChart[key] = []
+    depthChart[key].push({ name: playerName(p), pid, pos, pts, rostered: rosteredIds.has(pid), snapPct: s.tm_off_snp ? Math.round(s.off_snp / s.tm_off_snp * 100) : 0, team, vol })
+  }
+  for (const group of Object.values(depthChart)) {
+    group.sort((a, b) => b.vol - a.vol)
+    const totalVol = group.reduce((s, p) => s + p.vol, 0)
+    group.forEach((p, i) => {
+      p.depth = i + 1
+      p.volShare = totalVol ? Math.round(p.vol / totalVol * 100) : 0
+    })
+  }
+  const signalOf = p => {
+    if (p.pos === 'QB') return p.depth === 1 ? 'claim' : 'avoid'
+    if (p.depth <= 2 && p.volShare >= 25) return 'claim'
+    if (p.depth <= 2 && p.volShare >= 15) return 'gamble'
+    if (p.pts > 5 && p.volShare < 15) return 'gamble'
+    if (p.depth >= 3) return 'avoid'
+    return 'gamble'
+  }
+  const playerTable = []
+  for (const group of Object.values(depthChart)) {
+    for (const p of group) {
+      if (p.pts <= 0) continue
+      playerTable.push({ depth: p.depth, name: p.name, pid: p.pid, pos: p.pos, pts: p.pts, rostered: p.rostered, signal: signalOf(p), snapPct: p.snapPct, team: p.team, volShare: p.volShare })
+    }
+  }
+  playerTable.sort((a, b) => b.pts - a.pts)
+
+  const report = { bestWaiver, cards, nflTeams, perfectLineup, perfectLineupAll, playerTable, rosteredCount: rosteredIds.size, season: SEASON, week }
   const outPath = `${__dirname}/data/sleeper-${LEAGUE_ID}.json`
   fs.mkdirSync(`${__dirname}/data`, { recursive: true })
   fs.writeFileSync(outPath, JSON.stringify(report))
