@@ -21,9 +21,11 @@ Players,,,,,,
 ,"Signal (claim, gamble, avoid)",Signal,,x,,"Depth 1-2 + 25%+ vol = claim, depth 3+ = avoid"
 Charts,,,,,,
 ,Perfect Lineup,,,x,,
+,Streaming Picks,,,x,,Top 5 per QB/TE/K/DEF by matchup rank
 Teams,,,,,,
 ,Offensive fantasy points,,,x,,QB/RB/WR/TE/K only
 ,2025 Week 14 Rank,2025,,,x,FantasyPros PPR
+,Week over Week Delta,WoW,,x,,Previous week rank minus current rank
 ,Year-over-Year Delta,v2025,,x,,2025 rank minus current rank
 ,Positional Edge,Edge,,x,,Top position vs league average
 ,Positional Hole,Hole,,x,,Bottom position vs league average

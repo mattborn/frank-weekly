@@ -8,6 +8,7 @@
 - OPPG column on team cards (fetch 2025 post-week-14 and 2026 game scores from ESPN)
 - NFL teams card: expandable notes column explaining big movers (matchup, positional breakdown, QB situation)
 - NFL teams card: more meaningful after week 4 (1 week sample size is noisy)
+- NFL teams card: expandable rows showing positional depth behind edge/hole
 - LLM-powered weekly risk assessment: depth injuries, matchup difficulty, news-based claim/gamble/avoid signals on Tuesdays
 - Injury report card
 - Streaming picks for QB/TE/K/DEF
