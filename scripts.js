@@ -153,14 +153,15 @@ const renderWeek = data => {
       wThead.appendChild(wHr)
       wTable.appendChild(wThead)
       const wTbody = el('tbody')
-      for (const p of data.bestWaiver) {
+      const sorted = [...data.bestWaiver].sort((a, b) => (isSeason ? b.seasonPts : b.pts) - (isSeason ? a.seasonPts : a.pts))
+      for (const p of sorted) {
         const tr = el('tr')
         const mgr = el('td', { textContent: p.owner })
         mgr.title = p.owner
         mgr.style.color = ownerColors[p.owner] || ''
         tr.appendChild(mgr)
         tr.appendChild(el('td', { textContent: p.name, title: p.name }))
-        tr.appendChild(el('td', { textContent: p.pts.toFixed(1) }))
+        tr.appendChild(el('td', { textContent: (isSeason ? p.seasonPts : p.pts).toFixed(1) }))
         tr.appendChild(el('td', { textContent: p.lead !== null ? p.lead + (p.lead === 1 ? ' day' : ' days') : '—' }))
         wTbody.appendChild(tr)
       }

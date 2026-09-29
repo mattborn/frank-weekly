@@ -206,23 +206,29 @@ const SLOT_ORDER = { QB: 0, RB: 1, WR: 2, TE: 3, K: 4, DEF: 5 }
   const perfectLineup = buildPerfect([...rosteredPlayers])
   const perfectLineupAll = buildPerfect([...allPlayers])
 
-  // best waiver (week only)
-  const transactions = read(`${LEAGUE_DIR}/transactions-${pad(week)}.json`)
+  // best waiver — current + previous week transactions that scored this week, ≤7 day lead
+  const allTransactions = []
+  for (let w = Math.max(1, week - 1); w <= week; w++) allTransactions.push(...read(`${LEAGUE_DIR}/transactions-${pad(w)}.json`))
   const gameDate = {}
   for (const entry of statsRaw) gameDate[entry.player_id] = entry.date
   const bestWaiver = []
-  for (const t of transactions) {
+  const seenWaiver = new Set()
+  for (const t of allTransactions) {
+    if (t.status !== 'complete') continue
     for (const [pid, rid] of Object.entries(t.adds || {})) {
+      if (seenWaiver.has(`${pid}-${rid}`)) continue
       const m = matchups.find(m => m.roster_id === rid)
       const pts = (m?.players_points || {})[pid] || 0
       if (pts <= 0) continue
+      seenWaiver.add(`${pid}-${rid}`)
       let lead = null
       const gd = gameDate[pid]
       if (gd && t.created) {
         lead = Math.floor((new Date(gd + 'T00:00:00-06:00') - t.created) / 86400000)
         if (lead < 0) lead = 0
+        if (lead > 7) continue
       }
-      bestWaiver.push({ lead, name: playerName(playersDb[pid] || {}), owner: rosterOwner[rid], pts: +pts.toFixed(1), team: (playersDb[pid] || {}).team || '?' })
+      bestWaiver.push({ lead, name: playerName(playersDb[pid] || {}), owner: rosterOwner[rid], pid, pts: +pts.toFixed(1), team: (playersDb[pid] || {}).team || '?' })
     }
   }
   bestWaiver.sort((a, b) => b.pts - a.pts)
@@ -294,6 +300,8 @@ const SLOT_ORDER = { QB: 0, RB: 1, WR: 2, TE: 3, K: 4, DEF: 5 }
   const addWow = teams => teams.map(t => ({ ...t, wow: prevRank[t.abbr] != null ? prevRank[t.abbr] - t.rank : null }))
   const nflTeams = addWow(buildTeams(seasonAllStats))
   const nflTeamsWeekly = buildTeams(weekAllStats)
+
+  for (const w of bestWaiver) { w.seasonPts = +(seasonAllStats[w.pid] || 0).toFixed(1); delete w.pid }
 
   // player table (week only — volume/depth are weekly signals)
   const depthChart = {}
