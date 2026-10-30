@@ -233,8 +233,21 @@ const SLOT_ORDER = { QB: 0, RB: 1, WR: 2, TE: 3, K: 4, DEF: 5 }
   }
   bestWaiver.sort((a, b) => b.pts - a.pts)
 
-  // NFL teams (cumulative + weekly)
-  const buildTeams = statsSource => {
+  // NFL teams (cumulative + weekly) — norm credits bye weeks with the team's per-game average
+  const gamesThrough = upto => {
+    const games = {}
+    for (let w = 1; w <= upto; w++) {
+      const played = new Set()
+      for (const entry of read(`${DIR}/stats-${pad(w)}.json`)) {
+        const p = entry.player || playersDb[entry.player_id] || {}
+        const team = entry.team || p.team
+        if (team && ['QB', 'RB', 'WR', 'TE', 'K'].includes(p.position || '')) played.add(team)
+      }
+      for (const t of played) games[t] = (games[t] || 0) + 1
+    }
+    return Object.fromEntries(Object.entries(games).map(([t, g]) => [t, upto / g]))
+  }
+  const buildTeams = (statsSource, norm) => {
     const teamPts = {}, teamPosPts = {}
     for (const [pid, pts] of Object.entries(statsSource)) {
       const p = playersDb[pid] || {}
@@ -244,6 +257,10 @@ const SLOT_ORDER = { QB: 0, RB: 1, WR: 2, TE: 3, K: 4, DEF: 5 }
       teamPts[team] = (teamPts[team] || 0) + pts
       if (!teamPosPts[team]) teamPosPts[team] = {}
       teamPosPts[team][pos] = (teamPosPts[team][pos] || 0) + pts
+    }
+    if (norm) for (const team of Object.keys(teamPts)) {
+      teamPts[team] *= norm[team] ?? 1
+      for (const pos of Object.keys(teamPosPts[team])) teamPosPts[team][pos] *= norm[team] ?? 1
     }
     const posAvg = {}
     for (const ppts of Object.values(teamPosPts)) {
@@ -295,10 +312,10 @@ const SLOT_ORDER = { QB: 0, RB: 1, WR: 2, TE: 3, K: 4, DEF: 5 }
         prevStats[entry.player_id] = (prevStats[entry.player_id] || 0) + Object.entries(s).reduce((sum, [k, v]) => sum + (scoring[k] || 0) * v, 0)
       }
     }
-    prevRank = Object.fromEntries(buildTeams(prevStats).map(t => [t.abbr, t.rank]))
+    prevRank = Object.fromEntries(buildTeams(prevStats, gamesThrough(week - 1)).map(t => [t.abbr, t.rank]))
   }
   const addWow = teams => teams.map(t => ({ ...t, wow: prevRank[t.abbr] != null ? prevRank[t.abbr] - t.rank : null }))
-  const nflTeams = addWow(buildTeams(seasonAllStats))
+  const nflTeams = addWow(buildTeams(seasonAllStats, gamesThrough(week)))
   const nflTeamsWeekly = buildTeams(weekAllStats)
 
   for (const w of bestWaiver) { w.seasonPts = +(seasonAllStats[w.pid] || 0).toFixed(1); delete w.pid }
@@ -415,10 +432,36 @@ const SLOT_ORDER = { QB: 0, RB: 1, WR: 2, TE: 3, K: 4, DEF: 5 }
     }
   }
 
-  const report = { bestWaiver, cards, nflTeams, nflTeamsWeekly, perfectLineup, perfectLineupAll, playerTable, rosteredCount: seasonRosteredIds.size, season: SEASON, streaming, week }
+  // projection spikes — non-QB FAs whose next-week projection jumps vs season baseline
+  const spikeProjs = await fetchJson(`https://api.sleeper.com/projections/nfl/${SEASON}/${nextWeek}?season_type=regular&position[]=RB&position[]=WR&position[]=TE`)
+  const spikes = []
+  for (const e of spikeProjs) {
+    const proj = (e.stats || {}).pts_ppr
+    if (!proj || proj < 6 || weekRosteredIds.has(e.player_id)) continue
+    const p = playersDb[e.player_id] || e.player || {}
+    if (!['RB', 'WR', 'TE'].includes(p.position)) continue
+    const base = projAvg[e.player_id]
+    if (base == null || proj - base < 2) continue
+    spikes.push({ delta: +(proj - base).toFixed(1), hit: null, name: playerName(p), pid: e.player_id, pos: p.position, proj: +proj.toFixed(1), pts: null, team: p.team || e.team || '?' })
+  }
+  spikes.sort((a, b) => b.delta - a.delta)
+  spikes.length = Math.min(spikes.length, 10)
+
+  const report = { bestWaiver, cards, nflTeams, nflTeamsWeekly, perfectLineup, perfectLineupAll, playerTable, rosteredCount: seasonRosteredIds.size, season: SEASON, spikes, streaming, week }
   const dataDir = `${__dirname}/data`
   fs.mkdirSync(dataDir, { recursive: true })
   fs.writeFileSync(`${dataDir}/sleeper-${LEAGUE_ID}-${pad(week)}.json`, JSON.stringify(report))
+
+  // backfill actuals onto last week's spikes (they were flagged for this week)
+  const prevFile = `${dataDir}/sleeper-${LEAGUE_ID}-${pad(week - 1)}.json`
+  if (week > 1 && fs.existsSync(prevFile)) {
+    const prev = read(prevFile)
+    for (const s of prev.spikes || []) {
+      s.pts = +(weekAllStats[s.pid] || 0).toFixed(1)
+      s.hit = s.pts >= s.proj
+    }
+    fs.writeFileSync(prevFile, JSON.stringify(prev))
+  }
   const weeks = []
   for (let w = 1; w <= week; w++) {
     if (fs.existsSync(`${dataDir}/sleeper-${LEAGUE_ID}-${pad(w)}.json`)) weeks.push(w)

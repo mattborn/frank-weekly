@@ -34,3 +34,9 @@ tbody tr:not(.group):nth-child(even) { background: #1a1a1a }
 .total td { border-top: 1px solid #333; font-weight: bold }
 td.plus, tr.plus { color: var(--green) }
 td.minus, tr.minus { color: var(--red) }
+#rankChart { display: block; width: 100% }
+#rankChart .team { opacity: 0.45; transition: opacity 0.15s }
+#rankChart.hover .team { opacity: 0.1 }
+#rankChart.hover .team.on { opacity: 1 }
+#rankChart text { fill: var(--half); font: 9px monospace }
+#rankChart .team.on text { fill: var(--text); font-weight: bold }

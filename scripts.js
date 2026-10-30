@@ -1,5 +1,11 @@
 const LEAGUE = '1389707861860319232'
 const RANK_COLORS = ['#e8a', '#c6f', '#66f', '#48f', '#4cc', '#5a5', '#cc4', '#e93', '#a55', '#864', '#777', '#ccc']
+const NFL_COLORS = { ARI: '#d64562', ATL: '#e43d40', BAL: '#9a7fe8', BUF: '#5a8de8', CAR: '#30a3e0', CHI: '#e8742e', CIN: '#fb4f14', CLE: '#ff8243', DAL: '#8caee8', DEN: '#fa6b24', DET: '#45a8f5', GB: '#ffb612', HOU: '#e0556e', IND: '#7fa3e8', JAX: '#1fc0ad', KC: '#e8343f', LAC: '#2ec1f5', LAR: '#6a86ff', LV: '#c8c8c8', MIA: '#2cc6c0', MIN: '#9a66d6', NE: '#5577d6', NO: '#d3bc8d', NYG: '#4a6fe0', NYJ: '#3dab6d', PHI: '#2f9e8f', PIT: '#ffb81c', SEA: '#69be28', SF: '#cf4040', TB: '#ff6347', TEN: '#53a2e0', WAS: '#a85252' }
+const svg = (tag, attrs = {}) => {
+  const node = document.createElementNS('http://www.w3.org/2000/svg', tag)
+  for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v)
+  return node
+}
 const V2025_THRESHOLDS = [[20, '--green'], [10, '--blue'], [-8, '--orange'], [-16, '--red'], [-1, '--yellow']]
 const pad = n => String(n).padStart(2, '0')
 const weekCache = {}
@@ -279,6 +285,66 @@ const renderWeek = data => {
       streamDiv.appendChild(streamBody)
       renderStream()
       cardsAfterRosters.appendChild(streamDiv)
+    }
+
+    if (data.spikes?.length) {
+      const spikeDiv = el('div', { className: 'card' })
+      spikeDiv.appendChild(el('h2', { textContent: `Projection spikes · Week ${data.week + 1}` }))
+      const table = el('table')
+      const thead = el('thead')
+      const hr = el('tr')
+      for (const h of ['Player', 'Pos', 'Team', 'Proj', 'Delta', 'Actual']) hr.appendChild(el('th', { textContent: h }))
+      thead.appendChild(hr)
+      table.appendChild(thead)
+      const tbody = el('tbody')
+      for (const p of data.spikes) {
+        const tr = el('tr')
+        tr.appendChild(el('td', { textContent: p.name, title: p.name }))
+        tr.appendChild(el('td', { textContent: p.pos }))
+        tr.appendChild(el('td', { textContent: p.team }))
+        tr.appendChild(el('td', { textContent: p.proj.toFixed(1) }))
+        tr.appendChild(el('td', { textContent: '+' + p.delta.toFixed(1) }))
+        const actual = el('td', { textContent: p.pts === null ? '—' : p.pts.toFixed(1) })
+        if (p.pts !== null) actual.className = p.hit ? 'plus' : 'minus'
+        tr.appendChild(actual)
+        tbody.appendChild(tr)
+      }
+      table.appendChild(tbody)
+      spikeDiv.appendChild(table)
+      cardsAfterRosters.appendChild(spikeDiv)
+    }
+
+    if (data.week > 1) {
+      const chartDiv = el('div', { className: 'card' })
+      chartDiv.appendChild(el('h2', { textContent: 'Team rank by week' }))
+      const chart = svg('svg', { id: 'rankChart', viewBox: '0 0 380 520' })
+      chartDiv.appendChild(chart)
+      cardsAfterRosters.appendChild(chartDiv)
+      Promise.all(Array.from({ length: data.week }, (_, i) => {
+        const w = i + 1
+        return weekCache[w] ? Promise.resolve(weekCache[w]) : fetch(`data/sleeper-${LEAGUE}-${pad(w)}.json`).then(r => r.json()).then(d => (weekCache[w] = d))
+      })).then(weeksData => {
+        const [L, R, T, B, W, H] = [28, 44, 10, 24, 380, 520]
+        const x = w => L + (w - 1) / (data.week - 1) * (W - L - R)
+        const y = rank => T + (rank - 1) / 31 * (H - T - B)
+        for (const rank of [1, 8, 16, 24, 32]) {
+          chart.appendChild(svg('line', { stroke: '#222', x1: L, x2: W - R, y1: y(rank), y2: y(rank) }))
+          chart.appendChild(Object.assign(svg('text', { 'text-anchor': 'end', x: L - 6, y: y(rank) + 3 }), { textContent: rank }))
+        }
+        for (let w = 1; w <= data.week; w++) chart.appendChild(Object.assign(svg('text', { 'text-anchor': 'middle', x: x(w), y: H - 8 }), { textContent: w }))
+        const ranks = {}
+        weeksData.forEach((wd, i) => { for (const t of wd.nflTeams) (ranks[t.abbr] ??= [])[i] = t.rank })
+        for (const [abbr, rs] of Object.entries(ranks)) {
+          const g = svg('g', { class: 'team' })
+          const points = rs.map((r, i) => `${x(i + 1)},${y(r)}`).join(' ')
+          g.appendChild(svg('polyline', { fill: 'none', points, stroke: NFL_COLORS[abbr] || '#777', 'stroke-width': 1.5 }))
+          g.appendChild(Object.assign(svg('text', { x: x(data.week) + 6, y: y(rs.at(-1)) + 3 }), { textContent: abbr }))
+          g.appendChild(svg('polyline', { fill: 'none', points, stroke: 'transparent', 'stroke-width': 12 }))
+          g.onpointerenter = () => { chart.classList.add('hover'); g.classList.add('on') }
+          g.onpointerleave = () => { chart.classList.remove('hover'); g.classList.remove('on') }
+          chart.appendChild(g)
+        }
+      })
     }
 
     const teams = isSeason ? data.nflTeams : data.nflTeamsWeekly
