@@ -76,3 +76,58 @@ League leader insights (Your Champion, 6-1, vPick +268):
 - K: Reichard #174 last round → K1. Destiny, he’s a Vikings fan.
 - DEF: streaming like me.
 - Only 5 pickups all season. Winning on draft depth, not waivers. R4-9 he busted 3 (Daniels QB16, Godwin WR51, Addison WR48; Waddle WR32 squeaks inside top-36) vs my 2 (Price, BTJ). I out-drafted him mid-rounds. He won the edges (R1-3, R11-15).
+
+## Draft strategy signals (through week 8)
+
+Correlation of each draft-time signal with 2026 points, skill positions. Preseason projection = Sleeper’s frozen week-1 projections (generated before kickoff, saved in sleeper/proj-01.json).
+
+| Signal | R1-4 | R5-9 | R10-15 |
+|---|---|---|---|
+| Preseason projection | 0.45 | 0.32 | 0.73 |
+| Prior-year PPG | 0.45 | 0.26 | 0.62 |
+| Prior-year total pts | 0.48 | 0.07 | 0.52 |
+| ADP (market) | 0.38 | 0.31 | 0.33 |
+| Consistency (low variance) | 0.18 | 0.15 | 0.42 |
+| Years of experience | 0.08 | 0.14 | 0.44 |
+| 2025 team offense rank | 0.38 | 0.04 | 0.24 |
+| Prior-year games played | 0.17 | -0.11 | 0.10 |
+
+Best strategy by round group:
+- R1-4: take consensus studs. All signals agree here, so differentiation is hit luck. The real rule is avoid a catastrophic bucket. Drafted points correlate 0.93 with PF, and early-round points alone 0.82.
+- R5-9: the dead zone. Nothing predicts (prior production 0.07, team rank 0.04). Every method busts here, so take the market price and expect coin flips. This is where both my busts (Price, BTJ) and Your Champion’s (Daniels, Godwin, Addison) landed.
+- R10-15: projections and prior-year PPG dominate. Preseason projection hits 0.73 and catches breakouts PPG misses (Likely, Downs, Coker). Vets with real per-game production; skip darts.
+
+Overall strategies, ranked by what the data supports:
+- Projections are reliable. The frozen preseason projection beat every other signal, including the market.
+- Usage means rate, not volume. Prior-year PPG is the signal; games played is worthless (~0).
+- Established role is monotonic in R8-15: zero prior production medians 18 pts, 160+ medians 80 (10 of 15 hit 60+).
+- 2025 team-offense concentration flipped negative. The two heaviest buyers of last year’s top-10 offenses (me 54%, Great Salt Bills 62%) sit 9th and 10th in PF; the top-4 PF teams sit 23-38%. The edge is predicting this year’s offenses, not buying last year’s.
+- ADP discipline matters. The two biggest reachers (-13, -10 picks vs market) finished 9th and 10th in PF. Your Champion averaged +7 of value.
+
+## Matt’s corrections for 2027
+
+- Keep the team-tier predictions, drop the draft weighting
+- No injury or durability bias, in either direction
+- Any team bias (yes Bears, no Packers) is a proven inefficiency
+
+Opening (R1-4):
+- Best available by preseason projection
+- Two RBs by round 4
+
+Middlegame (R5-9):
+- Only take players falling past their ADP
+- QB here
+- Coin flips, darts, gut instinct only here
+
+Endgame (R10-15):
+- Best available by preseason projection
+- Established roles only, tie break on previous season PPG
+- At equal cost, take the depth-1
+- K and DEF in the last two rounds
+
+Insignificant factors:
+- Draft order / snake slot
+- Positional sequencing: alternating vs 3 WR in a row
+- Prior-year games played, injury history, durability
+- Prior-year total points, PPG is the signal
+- Prior-year team offense rank
